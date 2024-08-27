@@ -2,5 +2,7 @@ import { IsString } from 'class-validator';
 
 export class joinRoomDto {
   @IsString()
-  room: string;
+  roomId: string;
+  userId: string;
+  userName: string;
 }

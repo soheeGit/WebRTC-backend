@@ -3,14 +3,29 @@ import { Socket } from 'socket.io';
 
 @Injectable()
 export class WebrtcService {
-  private rooms: Record<string, Set<string>> = {};
+  private rooms: Record<
+    string,
+    Map<string, { userId: string; userName: string }>
+  > = {};
 
-  handleJoinRoom(client: Socket, room: string): void {
-    if (!this.rooms[room]) {
-      this.rooms[room] = new Set();
+  handleJoinRoom(
+    client: Socket,
+    roomId: string,
+    userId: string,
+    userName: string,
+  ): void {
+    if (!this.rooms[roomId]) {
+      this.rooms[roomId] = new Map();
     }
-    this.rooms[room].add(client.id);
-    client.join(room);
+    for (const [socketId, user] of this.rooms[roomId].entries()) {
+      if (user.userId === userId) {
+        this.rooms[roomId].delete(socketId);
+        break;
+      }
+    }
+
+    this.rooms[roomId].set(client.id, { userId, userName });
+    client.join(roomId);
   }
 
   handleLeaveRoom(client: Socket, room: string): void {
@@ -23,8 +38,16 @@ export class WebrtcService {
     client.leave(room);
   }
 
-  getClientsInRoom(room: string): string[] {
-    return this.rooms[room] ? Array.from(this.rooms[room]) : [];
+  getClientsInRoom(
+    roomId: string,
+  ): { socketId: string; userId: string; userName: string }[] {
+    return this.rooms[roomId]
+      ? Array.from(this.rooms[roomId], ([socketId, { userId, userName }]) => ({
+          socketId,
+          userId,
+          userName,
+        }))
+      : [];
   }
 
   getRoomIdWhereClientIn(clientId: string): string | undefined {
