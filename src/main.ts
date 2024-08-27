@@ -8,6 +8,6 @@ async function bootstrap() {
   // CORS 설정
   app.enableCors();
   app.useWebSocketAdapter(new IoAdapter(app));
-  await app.listen(5001);
+  await app.listen(8000);
 }
 bootstrap();
